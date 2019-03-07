@@ -13,6 +13,5 @@ SDN VM: http://sdnhub.org/tutorials/sdn-tutorial-vm/
 - Number of bytes per packet (lower number of bytes means more likely to be an attack)
 - Number of packets/unique ports per second
 
-
 ### Related Papers
 - https://www.hindawi.com/journals/scn/2018/9804061/
