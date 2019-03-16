@@ -9,16 +9,17 @@ Source IP, Dest IP, Packet Interval, and Protocl
 """
 class SVM:
     def train(self, data):
-        self.data = data
         """
     
         """
-    def openFile(filename):
+        self.data = data
+
+    def openFile(self, filename):
         """
 
         """
     
-    def classify(filename):
+    def classify(self, filename):
         """
         Determine ratio
         """
