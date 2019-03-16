@@ -1,12 +1,13 @@
 import numpy as np
-import sv
 import os
+from sklearn import svm
 
 """
 SVM monitors the rate of incoming packets and will classify if its good/bad
 Input and Dataset for SVM:
 Source IP, Dest IP, Packet Interval, and Protocl
 """
+
 class SVM:
     def train(self, data):
         """
@@ -24,10 +25,10 @@ class SVM:
         Determine ratio
         """
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     while True:
         """
         Use tshark to compature data and store into a .csv file
         """
-        prediction('file.csv')
+        #prediction('file.csv')
