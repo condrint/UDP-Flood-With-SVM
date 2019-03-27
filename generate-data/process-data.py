@@ -48,6 +48,33 @@ def processData():
         # in the last second + one for the current packet
         processedData[highPointer, 1] = 1 + (highPointer - lowPointer)
 
+    # calculate total # of unique destination ports in last second for each packet
+    uniquePortsInLastSecond = {} # a counter for # of unique ports - when a port's count reaches zero it's removed
+    lowPointer = 0
+
+    # add first packet's port to counter
+    uniquePortsInLastSecond[data[lowPointer, 4]] = 1
+    
+    for highPointer in range(1, len(data)):
+        newPort = data[highPointer, 4]
+        if newPort in uniquePortsInLastSecond:
+            uniquePortsInLastSecond[newPort] += 1
+        else:
+            uniquePortsInLastSecond[newPort] = 1
+
+        # remove any Ports from uniquePortsInLastSecond if they're more than a second old and
+        # their count reaches 0
+        while lowPointer < highPointer and float(data[highPointer, 0]) - float(data[lowPointer, 0]) > 1:
+            portToRemove = data[lowPointer, 4]
+            uniquePortsInLastSecond[portToRemove] -= 1
+
+            if uniquePortsInLastSecond[portToRemove] < 1:
+                del uniquePortsInLastSecond[portToRemove]
+            lowPointer += 1 
+        
+        processedData[highPointer, 2] = len(uniqueIPsInLastSecond)
+        
+
     # calculate total # of unique source IPs in last second for each packet
     uniqueIPsInLastSecond = {} # a counter for # of unique IPs - when an IP's count reaches zero it's removed
     lowPointer = 0
