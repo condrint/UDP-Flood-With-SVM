@@ -35,7 +35,7 @@ def processData():
     processedData[:, 0] = data[:, 3]
 
     # assign normal / bad class based on value encoded into packet's TTL
-    # 1 = bad, 1 = normal
+    # 1 = bad, 0 = normal
     for i in range(len(data)):
         processedData[i, 3] = 1 if data[i, 4] == '18' else 0
 
