@@ -11,10 +11,10 @@ protocolIndicators = {
 def processData():
     """
     input: no parameters, but expects a csv in the same directory with columns:
-    time, source IP, destination IP, protocol
+    time, source IP, destination IP, protocol, ttl
 
     output: a csv in the same directory named processed-data.csv with the following columns:
-    protocol, total # of packets in last second, and total # of unique source IP addresses in last second
+    protocol, total # of packets in last second, total # of unique source IP addresses in last second, and normal / bad class
     """
 
     # import the all the raw data as strings into a numpy array
@@ -29,10 +29,15 @@ def processData():
         data[i, 3] = protocolIndicators[data[i, 3]]
 
     # create new array that will be used to generate processed-data.csv
-    processedData = numpy.zeros((len(data), 3))
+    processedData = numpy.zeros((len(data), 4))
 
     # copy over protocol
     processedData[:, 0] = data[:, 3]
+
+    # assign normal / bad class based on value encoded into packet's TTL
+    # 1 = bad, 1 = normal
+    for i in range(len(data)):
+        processedData[i, 3] = 1 if data[i, 4] == '18' else 0
 
     # calculate total # of packets in last second for each packet
     # initialize pointers and fill out first row
