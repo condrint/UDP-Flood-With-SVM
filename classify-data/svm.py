@@ -3,11 +3,10 @@ import os
 from sklearn import svm
 from collections import deque
 
-"""
-SVM monitors the rate of incoming packets and will classify if its good/bad
-Input and Dataset for SVM:
-Source IP, Dest IP, Packet Interval, and Protocl
-"""
+protocolIndicators = {
+    '6': 0,
+    '17': 1,
+}
 
 class SVM:
     def __init__(self):
@@ -23,21 +22,15 @@ class SVM:
 
         # initialize variables for classification
         self.packetsSeen = 0
-        self.packetsClassifiedCorrectly = 0
-
-        # these two queues keep track of packets seen in the last second and evict
-        # older entries everytime a new packet comes in
-        self.totalPacketsQueue = deque([])
-        self.uniqueSourceIPsQueue = deque([])
+        self.packetsQueue = deque([])
         self.uniqueSourceIPs = {}
 
+        # used to calculate precision / accuracy (i think)
+        self.normalPacketsCorrect = 0
+        self.normalPacketsIncorrect = 0
+        self.badPacketsCorrect = 0
+        self.badPacketsIncorrect = 0
 
-
-    def openFile(self, filename):
-        """
-
-        """
-    
     def classify(self, packet):
         """
         input is an array with the following structure
@@ -50,11 +43,60 @@ class SVM:
 
         returns nothing (so far)
         """
+        self._evictOldPackets(packet[0])
+        self._updateQueue(packet)
 
+        processedPacket = numpy.zeros((1, 3))
+        processedPacket[0] = protocolIndicators[packet[3]]
+        processedPacket[1] = len(self.packetsQueue)
+        processedPacket[2] = len(self.uniqueSourceIPs)
+        classOfPacket = numpy.zeros((1, 1))
+        classOfPacket[0] = 1 if packet[4]  == '18' else 0
 
-if __name__ == "__main__":
-    while True:
+        prediction = self.svm.predict(processedPacket)
+
+        if prediction == classOfPacket:
+            if prediction == 1:
+                self.badPacketsCorrect += 1
+            else:
+                self.normalPacketsCorrect += 1
+        else:
+            if prediction == 1:
+                self.badPacketsIncorrect += 1
+            else:
+                self.normalPacketsIncorrect += 1
+        
+        self.packetsSeen += 1
+        print('Current accuracy: ' + str((self.normalPacketsCorrect + self.badPacketsCorrect)/self.packetsSeen) + '%')
+
+    def _evictOldPackets(self, currentTime):
         """
-        Use tshark to compature data and store into a .csv file
+        input is a new time value
+
+        removes any packets older than a second from both queues and updates
+        uniqueSourceIPs dictionary if necessary
         """
-        #prediction('file.csv')
+        if self.packetsQueue:
+
+            # if the packet is older than one second pop it
+            while currentTime - self.packetsQueue[0][0] > 1:
+                evictedPacketIP = self.packetsQueue.popleft()[1]
+                self.uniqueSourceIPs[evictedPacketIP] -= 1
+
+                if self.uniqueSourceIPs[evictedPacketIP] < 1:
+                    del self.uniqueSourceIPs[evictedPacketIP]
+        
+        return True
+        
+    def _updateQueue(self, packet):
+        """
+        add new packet to queue and update uniqueSourceIPs
+        """
+        self.packetsQueue.append(packet)
+        newIP = packet[1]
+
+        if newIP in self.uniqueSourceIPs:
+            self.uniqueSourceIPs[newIP] += 1
+        else:
+            self.uniqueSourceIPs[newIP] = 1
+
