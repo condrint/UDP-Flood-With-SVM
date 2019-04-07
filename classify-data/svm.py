@@ -27,9 +27,9 @@ class SVM:
 
         # used to calculate precision / accuracy (i think)
         self.normalPacketsCorrect = 0
-        self.normalPacketsIncorrect = 0
+        self.normalPacketsIncorrect = 0 # false positive
         self.badPacketsCorrect = 0
-        self.badPacketsIncorrect = 0
+        self.badPacketsIncorrect = 0 # true negative
 
     def classify(self, packet):
         """
