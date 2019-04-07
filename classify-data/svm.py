@@ -13,7 +13,7 @@ class SVM:
         """
         train the model from generated training data in generate-data folder
         """
-        data = numpy.loadtxt(open('../generate-data/test.csv', 'rb'), delimiter=',', dtype='str')
+        data = numpy.loadtxt(open('../generate-data/processedData.csv', 'rb'), delimiter=',', dtype='str')
 
         self.svm = svm.SVC()
 

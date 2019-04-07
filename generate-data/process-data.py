@@ -80,7 +80,7 @@ def processData():
         
         processedData[highPointer, 2] = len(uniqueIPsInLastSecond)
     
-    print(processedData)
+    numpy.savetxt('processedData.csv', processedData, delimiter=',')
 
 if __name__ == '__main__':
     processData()
