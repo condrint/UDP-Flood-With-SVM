@@ -42,9 +42,6 @@ def hanlder(signum, frame):
     print 'Crtl+C', signum
 
 def main(argv):
-    
-    start = time.clock()
-
     try:
         opts, args = getopt.getopt(sys.argv[1:],'s:e:',['start=','end='])
     except getopt.GetoptError:
@@ -67,26 +64,29 @@ def main(argv):
     if 1 send tcp
     if 2 send icp
     """
-    while time.clock() - start < 2:
-        random_number = random.randint(0,4)
-        
-        ip_dst = gendest(start, end)
-        ip_src = sourceIPgen()
-        udp_packets = Ether()/IP(dst=ip_dst, src=ip_src)/UDP(dport=80,sport=2)
-        tcp_packets = Ether()/IP(dst=ip_dst, src=ip_src)/TCP(dport=443,sport=222)
-        icmp_packets =  Ether()/IP(dst=ip_dst, src=ip_src)/ICMP()
+    
+    # square two random numbers between 0 and 2
+    # to make lower numbers more likely
+    time.sleep(random.uniform(0, 2) * random.uniform(0, 2))
+    
+    random_number = random.randint(0,4)        
+    ip_dst = gendest(start, end)
+    ip_src = sourceIPgen()
+    udp_packets = Ether()/IP(dst=ip_dst, src=ip_src)/UDP(dport=80,sport=2)
+    tcp_packets = Ether()/IP(dst=ip_dst, src=ip_src)/TCP(dport=443,sport=222)
+    icmp_packets =  Ether()/IP(dst=ip_dst, src=ip_src)/ICMP()
      
-        if random_number == 0:
-            sendp(udp_packets, iface=interface.rstrip(), inter=0.5)
-            print(repr(udp_packets))
-        if random_number == 1: 
-            sendp(tcp_packets, iface=interface.rstrip(), inter=0.5)
-            print(repr(tcp_packets))
-        if random_number == 2:
-            sendp(icmp_packets, iface=interface.rstrip(), inter=0.5)
-            print(repr(icmp_packets))
-        if random_number >= 3:
-            return None
+    if random_number == 0:
+        sendp(udp_packets, iface=interface.rstrip(), inter=0.5)
+        print(repr(udp_packets))
+    if random_number == 1:
+        sendp(tcp_packets, iface=interface.rstrip(), inter=0.5)
+        print(repr(tcp_packets))
+    if random_number == 2:
+        sendp(icmp_packets, iface=interface.rstrip(), inter=0.5)
+        print(repr(icmp_packets))
+    if random_number >= 3:
+        return None
 
 
 if __name__ == '__main__':

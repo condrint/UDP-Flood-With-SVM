@@ -24,7 +24,7 @@ For each switch:
 4) When you see an IP packet, if you know the destination port (because it's
    in the table from step 1), install a flow for it.
 """
-
+import svm.py
 from pox.core import core
 import pox
 log = core.getLogger()
@@ -92,9 +92,13 @@ class l3_switch (EventMixin):
     # These are "fake gateways" -- we'll answer ARPs for them with MAC
     # of the switch they're connected to.
     self.fakeways = set(fakeways)
-    self.startTime = time.time()
-    # self.svm = SVM()
 
+    #######################################
+    
+    self.startTime = time.time()
+    self.svm = svm.SVM()
+
+    #######################################
 
     # If True, we create "wide" matches.  Otherwise, we create "narrow"
     # (exact) matches.
@@ -184,6 +188,8 @@ class l3_switch (EventMixin):
       """
       stdout ipv4 header
       """
+      ##################################
+      
       currentTime = time.time() - self.startTime
       sourceIP = packet.next.srcip
       destinationIP = packet.next.dstip
@@ -205,6 +211,9 @@ class l3_switch (EventMixin):
           trafficClass = 0
 
       self.SVM.classify([currentTime, sourceIP, destinationIP, protocol, trafficClass])
+
+      ####################################
+
       # Send any waiting packets...
       self._send_lost_buffers(dpid, packet.next.srcip, packet.src, inport)
 
