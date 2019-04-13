@@ -73,7 +73,7 @@ class SVM:
                 self.normalPacketsIncorrect += 1
         
         self.packetsSeen += 1
-        print('Current accuracy: ' + str((self.normalPacketsCorrect + self.badPacketsCorrect)/self.packetsSeen) + '%')
+        print 'Current accuracy: ' + str((self.normalPacketsCorrect + self.badPacketsCorrect)/self.packetsSeen) + '%'
 
     def _evictOldPackets(self, currentTime):
         """

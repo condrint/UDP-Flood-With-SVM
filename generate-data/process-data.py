@@ -29,7 +29,7 @@ def processData():
     sortedIndices = numpy.argsort(data[:, 0])
     data = data[sortedIndices]
 
-    for i in range(len(data)):
+    for i in xrange(len(data)):
         # convert protocol to encoded value
         data[i, 3] = protocolIndicators[data[i, 3]]
 
@@ -48,7 +48,7 @@ def processData():
     # initialize pointers and fill out first row
     lowPointer = 0
     processedData[0, 1] = 0
-    for highPointer in range(1, len(data)):
+    for highPointer in xrange(1, len(data)):
         while lowPointer < highPointer and float(data[highPointer, 0]) - float(data[lowPointer, 0]) > second:
             lowPointer += 1
 
@@ -65,7 +65,7 @@ def processData():
     # add first packet's IP to counter
     uniqueIPsInLastSecond[data[lowPointer, 1]] = 1
     
-    for highPointer in range(1, len(data)):
+    for highPointer in xrange(1, len(data)):
         newIP = data[highPointer, 1]
 
         if newIP in uniqueIPsInLastSecond:
@@ -93,7 +93,7 @@ def processData():
         # add first packet's IP to counter
         destinationIPHitCountInLastSecond[data[lowPointer, 2]] = 1
 
-        for highPointer in range(1, len(data)):
+        for highPointer in xrange(1, len(data)):
             newIP = data[highPointer, 2]
 
             if newIP in destinationIPHitCountInLastSecond:
