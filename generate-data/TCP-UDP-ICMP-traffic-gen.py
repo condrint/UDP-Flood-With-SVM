@@ -67,7 +67,7 @@ def main(argv):
     
     # square two random numbers between 0 and 2
     # to make lower numbers more likely
-    time.sleep(random.uniform(0, 2) * random.uniform(0, 2))
+    time.sleep(random.uniform(0, 2) * random.uniform(0, 1))
     
     random_number = random.randint(0,4)        
     ip_dst = gendest(start, end)
