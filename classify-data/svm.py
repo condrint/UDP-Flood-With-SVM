@@ -6,6 +6,7 @@ from collections import deque
 protocolIndicators = {
     '6': 0,
     '17': 1,
+    '1', 2,
 }
 
 # variable to change time frame of parameters
