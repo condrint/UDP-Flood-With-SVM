@@ -8,6 +8,9 @@ protocolIndicators = {
     '17': 1,
 }
 
+# variable to change time frame of parameters
+second = 1
+
 class SVM:
     def __init__(self):
         """
@@ -23,7 +26,8 @@ class SVM:
         # initialize variables for classification
         self.packetsSeen = 0
         self.packetsQueue = deque([])
-        self.uniqueSourceIPs = {}
+        self.uniqueSourceIPs = {} 
+        self.destinationIPHitCountInLastSecond = {}
 
         # used to calculate precision / accuracy (i think)
         self.normalPacketsCorrect = 0
@@ -46,15 +50,17 @@ class SVM:
         self._evictOldPackets(packet[0])
         self._updateQueue(packet)
 
-        processedPacket = numpy.zeros((1, 3))
+        processedPacket = numpy.zeros((1, 4))
         processedPacket[0] = protocolIndicators[packet[3]]
         processedPacket[1] = len(self.packetsQueue)
         processedPacket[2] = len(self.uniqueSourceIPs)
+        processedPacket[3] = len(self.destinationIPHitCountInLastSecond)
         classOfPacket = numpy.zeros((1, 1))
         classOfPacket[0] = 1 if packet[4]  == '18' else 0
 
         prediction = self.svm.predict(processedPacket)
 
+        self.packetsSeen += 1
         if prediction == classOfPacket:
             if prediction == 1:
                 self.badPacketsCorrect += 1
@@ -79,12 +85,17 @@ class SVM:
         if self.packetsQueue:
 
             # if the packet is older than one second pop it
-            while currentTime - self.packetsQueue[0][0] > 1:
+            while currentTime - self.packetsQueue[0][0] > second:
                 evictedPacketIP = self.packetsQueue.popleft()[1]
                 self.uniqueSourceIPs[evictedPacketIP] -= 1
 
                 if self.uniqueSourceIPs[evictedPacketIP] < 1:
                     del self.uniqueSourceIPs[evictedPacketIP]
+
+                self.destinationIPHitCountInLastSecond -= 1
+
+                if self.destinationIPHitCountInLastSecond < 1:
+                    del self.destinationIPHitCountInLastSecond
         
         return True
         

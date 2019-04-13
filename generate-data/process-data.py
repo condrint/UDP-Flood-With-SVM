@@ -7,6 +7,8 @@ protocolIndicators = {
     '17': 1,
 }
 
+# variable to change time frame of parameters
+second = 1
 
 def processData():
     """
@@ -14,7 +16,10 @@ def processData():
     time, source IP, destination IP, protocol, ttl
 
     output: a csv in the same directory named processed-data.csv with the following columns:
-    protocol, total # of packets in last second, total # of unique source IP addresses in last second, and normal / bad class
+    protocol, total # of packets in last second, 
+    total # of unique source IP addresses in last second, 
+    total # of packets to destination IP address in last second,
+    and normal / bad class
     """
 
     # import the all the raw data as strings into a numpy array
@@ -29,7 +34,7 @@ def processData():
         data[i, 3] = protocolIndicators[data[i, 3]]
 
     # create new array that will be used to generate processed-data.csv
-    processedData = numpy.zeros((len(data), 4))
+    processedData = numpy.zeros((len(data), 5))
 
     # copy over protocol
     processedData[:, 0] = data[:, 3]
@@ -44,7 +49,7 @@ def processData():
     lowPointer = 0
     processedData[0, 1] = 0
     for highPointer in range(1, len(data)):
-        while lowPointer < highPointer and float(data[highPointer, 0]) - float(data[lowPointer, 0]) > 1:
+        while lowPointer < highPointer and float(data[highPointer, 0]) - float(data[lowPointer, 0]) > second:
             lowPointer += 1
 
         # for this next line, lowPointer will always point to a packet
@@ -70,7 +75,7 @@ def processData():
 
         # remove any IPs from uniqueIPsInLastSecond if they're more than a second old and
         # their count reaches 0
-        while lowPointer < highPointer and float(data[highPointer, 0]) - float(data[lowPointer, 0]) > 1:
+        while lowPointer < highPointer and float(data[highPointer, 0]) - float(data[lowPointer, 0]) > second:
             IPtoRemove = data[lowPointer, 1]
             uniqueIPsInLastSecond[IPtoRemove] -= 1
 
@@ -80,6 +85,34 @@ def processData():
         
         processedData[highPointer, 2] = len(uniqueIPsInLastSecond)
     
+        # calculate total # of times destination ip has received a packet in last second
+        # initialize pointers and fill out first row
+        destinationIPHitCountInLastSecond = {} # a counter for # of unique IPs - when an IP's count reaches zero it's removed
+        lowPointer = 0
+
+        # add first packet's IP to counter
+        destinationIPHitCountInLastSecond[data[lowPointer, 2]] = 1
+
+        for highPointer in range(1, len(data)):
+            newIP = data[highPointer, 2]
+
+            if newIP in destinationIPHitCountInLastSecond:
+                destinationIPHitCountInLastSecond[newIP] += 1
+            else:
+                destinationIPHitCountInLastSecond[newIP] = 1
+
+            # remove any IPs from destinationIPHitCountInLastSecond if they're more than a second old and
+            # their count reaches 0
+            while lowPointer < highPointer and float(data[highPointer, 0]) - float(data[lowPointer, 0]) > second:
+                IPtoRemove = data[lowPointer, 2]
+                destinationIPHitCountInLastSecond[IPtoRemove] -= 1
+
+                if destinationIPHitCountInLastSecond[IPtoRemove] < 1:
+                    del destinationIPHitCountInLastSecond[IPtoRemove]
+                lowPointer += 1 
+
+            processedData[highPointer, 2] = len(destinationIPHitCountInLastSecond)
+
     numpy.savetxt('processedData.csv', processedData, delimiter=',')
 
 if __name__ == '__main__':
