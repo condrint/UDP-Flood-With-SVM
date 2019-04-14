@@ -1,12 +1,13 @@
+from __future__ import division
 import numpy
 import os
 from sklearn import svm
 from collections import deque
 
 protocolIndicators = {
-    '6': 0,
-    '17': 1,
-    '1', 2,
+    6: 0,
+    17: 1,
+    1: 2,
 }
 
 # variable to change time frame of parameters
@@ -17,12 +18,12 @@ class SVM:
         """
         train the model from generated training data in generate-data folder
         """
-        data = numpy.loadtxt(open('../generate-data/processedData.csv', 'rb'), delimiter=',', dtype='str')
+        data = numpy.loadtxt(open('pox/forwarding/generate-data/processedData.csv', 'rb'), delimiter=',', dtype='str')
 
         self.svm = svm.SVC()
 
         # train the model - y values are locationed in last (index 3) column
-        self.svm.fit(data[:, 0:3], data[:, 3])
+        self.svm.fit(data[:, 0:4], data[:, 4])
 
         # initialize variables for classification
         self.packetsSeen = 0
@@ -48,33 +49,37 @@ class SVM:
 
         returns nothing (so far)
         """
+        print 'packet received'
+        # convert ip address objects to strings
+        packet[1], packet[2] = str(packet[1]), str(packet[2])
+        print packet
         self._evictOldPackets(packet[0])
         self._updateQueue(packet)
 
         processedPacket = numpy.zeros((1, 4))
-        processedPacket[0] = protocolIndicators[packet[3]]
-        processedPacket[1] = len(self.packetsQueue)
-        processedPacket[2] = len(self.uniqueSourceIPs)
-        processedPacket[3] = len(self.destinationIPHitCountInLastSecond)
-        classOfPacket = numpy.zeros((1, 1))
-        classOfPacket[0] = 1 if packet[4]  == '18' else 0
+        processedPacket[:,0] = protocolIndicators[packet[3]]
+        processedPacket[:,1] = len(self.packetsQueue)
+        processedPacket[:,2] = len(self.uniqueSourceIPs)
+        processedPacket[:,3] = len(self.destinationIPHitCountInLastSecond)
+        classOfPacket = packet[4]
 
         prediction = self.svm.predict(processedPacket)
-
         self.packetsSeen += 1
-        if prediction == classOfPacket:
-            if prediction == 1:
+        
+        if prediction[0] == classOfPacket:
+            if prediction == '1':
                 self.badPacketsCorrect += 1
             else:
                 self.normalPacketsCorrect += 1
         else:
-            if prediction == 1:
+            if prediction == '0':
                 self.badPacketsIncorrect += 1
             else:
                 self.normalPacketsIncorrect += 1
         
-        self.packetsSeen += 1
-        print 'Current accuracy: ' + str((self.normalPacketsCorrect + self.badPacketsCorrect)/self.packetsSeen) + '%'
+        print 'Current accuracy: ' + str((self.normalPacketsCorrect + self.badPacketsCorrect)/self.packetsSeen)
+        print self.normalPacketsCorrect, self.normalPacketsIncorrect, self.badPacketsCorrect, self.badPacketsIncorrect
+        print '\n'
 
     def _evictOldPackets(self, currentTime):
         """
@@ -87,16 +92,19 @@ class SVM:
 
             # if the packet is older than one second pop it
             while currentTime - self.packetsQueue[0][0] > second:
-                evictedPacketIP = self.packetsQueue.popleft()[1]
-                self.uniqueSourceIPs[evictedPacketIP] -= 1
+                packet = self.packetsQueue.popleft()
+                evictedPacketSrcIP, evictedPacketDstIP = packet[1], packet[2]
+                
+                
+                self.uniqueSourceIPs[evictedPacketSrcIP] -= 1
 
-                if self.uniqueSourceIPs[evictedPacketIP] < 1:
-                    del self.uniqueSourceIPs[evictedPacketIP]
+                if self.uniqueSourceIPs[evictedPacketSrcIP] < 1:
+                    del self.uniqueSourceIPs[evictedPacketSrcIP]
 
-                self.destinationIPHitCountInLastSecond -= 1
+                self.destinationIPHitCountInLastSecond[evictedPacketDstIP] -= 1
 
-                if self.destinationIPHitCountInLastSecond < 1:
-                    del self.destinationIPHitCountInLastSecond
+                if self.destinationIPHitCountInLastSecond[evictedPacketDstIP] < 1:
+                    del self.destinationIPHitCountInLastSecond[evictedPacketDstIP]
         
         return True
         
@@ -111,4 +119,11 @@ class SVM:
             self.uniqueSourceIPs[newIP] += 1
         else:
             self.uniqueSourceIPs[newIP] = 1
+
+        newIP = packet[2]
+        if newIP in self.destinationIPHitCountInLastSecond:
+            self.destinationIPHitCountInLastSecond[newIP] += 1
+        else:
+            self.destinationIPHitCountInLastSecond[newIP] = 1
+
 
