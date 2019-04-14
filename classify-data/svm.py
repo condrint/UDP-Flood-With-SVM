@@ -10,7 +10,7 @@ protocolIndicators = {
 }
 
 # variable to change time frame of parameters
-second = 1
+second = 10
 
 class SVM:
     def __init__(self):

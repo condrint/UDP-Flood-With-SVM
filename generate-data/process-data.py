@@ -9,7 +9,7 @@ protocolIndicators = {
 }
 
 # variable to change time frame of parameters
-second = 1
+second = 10
 
 def processData():
     """
@@ -23,6 +23,8 @@ def processData():
     and normal / bad class
     """
 
+    print 'processing data....'
+    
     # import the all the raw data as strings into a numpy array
     data = numpy.loadtxt(open('test.csv', 'rb'), delimiter=',', dtype='str')
 
@@ -43,7 +45,7 @@ def processData():
     # assign normal / bad class based on value encoded into packet's TTL
     # 1 = bad, 0 = normal
     for i in range(len(data)):
-        processedData[i, 3] = 1 if data[i, 4] == '18' else 0
+        processedData[i, 4] = 1 if data[i, 4] == '18' else 0
 
     # calculate total # of packets in last second for each packet
     # initialize pointers and fill out first row
@@ -58,7 +60,9 @@ def processData():
         # by highPointer. The difference is the total number of packets 
         # in the last second + one for the current packet
         processedData[highPointer, 1] = 1 + (highPointer - lowPointer)
-        
+
+
+
     # calculate total # of unique source IPs in last second for each packet
     uniqueIPsInLastSecond = {} # a counter for # of unique IPs - when an IP's count reaches zero it's removed
     lowPointer = 0
@@ -85,36 +89,39 @@ def processData():
             lowPointer += 1 
         
         processedData[highPointer, 2] = len(uniqueIPsInLastSecond)
+
+
     
-        # calculate total # of times destination ip has received a packet in last second
-        # initialize pointers and fill out first row
-        destinationIPHitCountInLastSecond = {} # a counter for # of unique IPs - when an IP's count reaches zero it's removed
-        lowPointer = 0
+    # calculate total # of times destination ip has received a packet in last second
+    # initialize pointers and fill out first row
+    destinationIPHitCountInLastSecond = {} # a counter for # of unique IPs - when an IP's count reaches zero it's removed
+    lowPointer = 0
+    
+    # add first packet's IP to counter
+    destinationIPHitCountInLastSecond[data[lowPointer, 2]] = 1
 
-        # add first packet's IP to counter
-        destinationIPHitCountInLastSecond[data[lowPointer, 2]] = 1
+    for highPointer in xrange(1, len(data)):
+        newIP = data[highPointer, 2]
+        
+        if newIP in destinationIPHitCountInLastSecond:
+            destinationIPHitCountInLastSecond[newIP] += 1
+        else:
+            destinationIPHitCountInLastSecond[newIP] = 1
 
-        for highPointer in xrange(1, len(data)):
-            newIP = data[highPointer, 2]
+        # remove any IPs from destinationIPHitCountInLastSecond if they're more than a second old and
+        # their count reaches 0
+        while lowPointer < highPointer and float(data[highPointer, 0]) - float(data[lowPointer, 0]) > second:
+            IPtoRemove = data[lowPointer, 2]
+            destinationIPHitCountInLastSecond[IPtoRemove] -= 1
 
-            if newIP in destinationIPHitCountInLastSecond:
-                destinationIPHitCountInLastSecond[newIP] += 1
-            else:
-                destinationIPHitCountInLastSecond[newIP] = 1
+            if destinationIPHitCountInLastSecond[IPtoRemove] < 1:
+                del destinationIPHitCountInLastSecond[IPtoRemove]
+            lowPointer += 1 
+            processedData[highPointer, 3] = len(destinationIPHitCountInLastSecond)
 
-            # remove any IPs from destinationIPHitCountInLastSecond if they're more than a second old and
-            # their count reaches 0
-            while lowPointer < highPointer and float(data[highPointer, 0]) - float(data[lowPointer, 0]) > second:
-                IPtoRemove = data[lowPointer, 2]
-                destinationIPHitCountInLastSecond[IPtoRemove] -= 1
-
-                if destinationIPHitCountInLastSecond[IPtoRemove] < 1:
-                    del destinationIPHitCountInLastSecond[IPtoRemove]
-                lowPointer += 1 
-
-            processedData[highPointer, 2] = len(destinationIPHitCountInLastSecond)
-
-    numpy.savetxt('processedData.csv', processedData, delimiter=',')
-
+    processedData = processedData.astype(int) # convert all floats to int
+    numpy.savetxt('processedData.csv', processedData, delimiter=',', fmt='%d')
+    print 'processed data successfully'
+    
 if __name__ == '__main__':
     processData()
