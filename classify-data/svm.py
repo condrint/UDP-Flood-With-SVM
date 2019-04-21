@@ -3,8 +3,6 @@ import numpy
 import os
 from sklearn import svm
 from collections import deque
-from mlxtend.plotting import plot_decision_regions
-import matplotlib.pyplot as plt
 
 protocolIndicators = {
     6: 0,
