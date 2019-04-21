@@ -1,4 +1,5 @@
 import numpy
+import time
 
 # This data structure encodes the data for the model instead of using 
 # arbitrary protocol numbers. This should probably be imported from the root directory somehow
@@ -9,7 +10,7 @@ protocolIndicators = {
 }
 
 # variable to change time frame of parameters
-second = 10
+second = 3
 
 def processData():
     """
@@ -102,7 +103,6 @@ def processData():
 
     for highPointer in xrange(1, len(data)):
         newIP = data[highPointer, 2]
-        
         if newIP in destinationIPHitCountInLastSecond:
             destinationIPHitCountInLastSecond[newIP] += 1
         else:
@@ -117,8 +117,7 @@ def processData():
             if destinationIPHitCountInLastSecond[IPtoRemove] < 1:
                 del destinationIPHitCountInLastSecond[IPtoRemove]
             lowPointer += 1 
-            processedData[highPointer, 3] = len(destinationIPHitCountInLastSecond)
-
+        processedData[highPointer, 3] = len(destinationIPHitCountInLastSecond.keys())
     processedData = processedData.astype(int) # convert all floats to int
     numpy.savetxt('processedData.csv', processedData, delimiter=',', fmt='%d')
     print 'processed data successfully'

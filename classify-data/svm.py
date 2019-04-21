@@ -3,6 +3,8 @@ import numpy
 import os
 from sklearn import svm
 from collections import deque
+from mlxtend.plotting import plot_decision_regions
+import matplotlib.pyplot as plt
 
 protocolIndicators = {
     6: 0,
@@ -24,7 +26,7 @@ class SVM:
 
         # train the model - y values are locationed in last (index 3) column
         self.svm.fit(data[:, 0:4], data[:, 4])
-
+                              
         # initialize variables for classification
         self.packetsSeen = 0
         self.packetsQueue = deque([])
@@ -65,7 +67,8 @@ class SVM:
 
         prediction = self.svm.predict(processedPacket)
         self.packetsSeen += 1
-        
+
+
         if prediction[0] == classOfPacket:
             if prediction == '1':
                 self.badPacketsCorrect += 1
@@ -125,5 +128,6 @@ class SVM:
             self.destinationIPHitCountInLastSecond[newIP] += 1
         else:
             self.destinationIPHitCountInLastSecond[newIP] = 1
+
 
 
